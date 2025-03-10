@@ -1,5 +1,10 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 import pytest
-from models import User, TaskManager
+from app.models import User, TaskManager
+
+
 
 @pytest.fixture(autouse=True)
 def reset_ids():
@@ -17,7 +22,7 @@ def task_manager():
 @pytest.fixture
 def logged_in_user(task_manager):
     user = task_manager.register_user("Alice", "alice@example.com", "password123")
-    task_manager.login(user)  
+    task_manager.login(user)
     return user
 
 class TestUserClass:

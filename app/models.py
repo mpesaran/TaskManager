@@ -1,3 +1,4 @@
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User:
     _id = 1
@@ -5,7 +6,7 @@ class User:
     def __init__(self, name, email, password):
         self.name = name
         self.email = email
-        self.password = password
+        self.password_hash = generate_password_hash(password)
         self.user_id = User._id
         self.tasks = []
         User._id += 1
@@ -39,17 +40,18 @@ class TaskManager:
         return user
 
 
-    def login(self, user):
-        if user in self.users:
+    def login(self, email, password):
+        user = next((u for u in self.users if u.email == email), None) # find user by email
+        if user and check_password_hash(user.password_hash, password):
             self.current_user = user
-            return True
-        return False
+            return user
+        return None
 
 
     def add_task(self, title, due_date):
         if self.current_user:
             task = {
-                "id": len(self.tasks) + 1,
+                "task_id": len(self.tasks) + 1,
                 "user_id": self.current_user.user_id,
                 "title": title,
                 "due_data": due_date
@@ -59,9 +61,9 @@ class TaskManager:
         return None
 
 
-    def get_tasks(self):
-        if self.current_user:
-            return [task for task in self.tasks if task["user_id"] == self.current_user.user_id]
+    def get_tasks(self, user_id):
+        if self.current_user.user_id == user_id:
+            return [task for task in self.tasks if task["user_id"] == user_id]
         return []
 
 
@@ -69,7 +71,7 @@ class TaskManager:
         if self.current_user:
             taske_to_delete = None
             for task in self.tasks:
-                if task["id"] == task_id and task["user_id"] == self.current_user.user_id:
+                if task["task_id"] == int(task_id) and task["user_id"] == self.current_user.user_id:
                     taske_to_delete = task
                     break
             if taske_to_delete:
